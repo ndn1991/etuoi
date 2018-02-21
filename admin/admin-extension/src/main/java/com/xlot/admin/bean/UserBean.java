@@ -1,7 +1,7 @@
 package com.xlot.admin.bean;
 
 import com.nhb.common.data.PuObject;
-import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.UUIDUtils;
 import com.xlot.admin.id.UserStatus;
 import com.xlot.admin.statics.UserType;
 
@@ -22,7 +22,7 @@ public class UserBean {
 
 	public PuObject toPuObject() {
 		PuObject puo = new PuObject();
-		puo.setString("userId", Converter.bytesToUUIDString(userId));
+		puo.setString("userId", UUIDUtils.bytesToUUIDString(userId));
 		puo.setString("username", username);
 //		puo.setString("password", password);
 //		puo.setString("hashKey", hashKey);
@@ -30,7 +30,7 @@ public class UserBean {
 		puo.setInteger("status", status);
 		puo.setLong("timestamp", timestamp);
 		puo.setInteger("type", type);
-		puo.setString("refId",  refId == null ? null : Converter.bytesToUUIDString(refId));
+		puo.setString("refId",  refId == null ? null : UUIDUtils.bytesToUUIDString(refId));
 		return puo;
 	}
 	

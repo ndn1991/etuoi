@@ -10,7 +10,7 @@ import com.nhb.common.data.PuArrayList;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuObjectRO;
 import com.nhb.common.data.PuValue;
-import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.UUIDUtils;
 import com.xlot.admin.bean.UserBean;
 import com.xlot.admin.id.PasswordUtils;
 import com.xlot.admin.id.UserStatus;
@@ -60,7 +60,7 @@ public class CreateAccountProcessor extends AbstractAdminProcessor {
 			roleIds.add(getRaw(r));
 		}
 		long now = System.currentTimeMillis();
-		byte[] userId = Converter.uuidToBytes(UUID.randomUUID());
+		byte[] userId = UUIDUtils.uuidToBytes(UUID.randomUUID());
 		Tuple2<String, String> tuple = PasswordUtils.getStoredPassword(password);
 		UserBean user = new UserBean();
 		user.setHashKey(tuple._1);

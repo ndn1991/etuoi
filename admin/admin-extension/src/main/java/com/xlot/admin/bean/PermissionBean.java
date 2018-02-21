@@ -1,7 +1,7 @@
 package com.xlot.admin.bean;
 
 import com.nhb.common.data.PuObject;
-import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.UUIDUtils;
 
 import lombok.Data;
 import ndn.GeneratePuMethod;
@@ -22,7 +22,7 @@ public class PermissionBean {
 		puo.setLong("createdTime", createdTime);
 		puo.setString("description", description);
 		puo.setString("name", name);
-		puo.setString("id", Converter.bytesToUUIDString(id));
+		puo.setString("id", UUIDUtils.bytesToUUIDString(id));
 		return puo;
 	}
 }

@@ -138,4 +138,13 @@
             </variables>
         </managedobject>
     </lifecycles>
+   	<services>
+        <sms>
+            <name>sms_service</name>
+            <handle>com.xlot.sms.sender.SpeedSmsSender</handle>
+            <variables>
+                <variable name="accessToken" type="string">KGYbNceQR1IdZ1oIKJsWNbuXHQmOu0cy</variable>
+            </variables>
+        </sms>
+    </services>
 </mario>

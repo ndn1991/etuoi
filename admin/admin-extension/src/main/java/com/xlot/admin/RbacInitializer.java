@@ -3,7 +3,7 @@ package com.xlot.admin;
 import java.util.Arrays;
 import java.util.UUID;
 
-import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.UUIDUtils;
 import com.xlot.admin.bean.UserBean;
 import com.xlot.admin.id.PasswordUtils;
 import com.xlot.admin.id.UserStatus;
@@ -24,15 +24,15 @@ public interface RbacInitializer {
 		user.setSalt(tuple._1);
 		user.setStatus(UserStatus.ACTIVE);
 		user.setTimestamp(now);
-		user.setUserId(Converter.uuidToBytes(UUID.randomUUID()));
+		user.setUserId(UUIDUtils.uuidToBytes(UUID.randomUUID()));
 		user.setUsername(rootUser);
 		userModel.insertIgnore(user);
 		
-		byte[] roleId = Converter.uuidToBytes(UUID.randomUUID());
+		byte[] roleId = UUIDUtils.uuidToBytes(UUID.randomUUID());
 		rbacModel.insertRole(roleId, Roles.SUPER_USER, null, now);
 		roleId = rbacModel.getRole(Roles.SUPER_USER).getId();
 		
-		byte[] permissionId = Converter.uuidToBytes(UUID.randomUUID());
+		byte[] permissionId = UUIDUtils.uuidToBytes(UUID.randomUUID());
 		rbacModel.insertPermission(permissionId, Permissions.SUPER_USER, null);
 		permissionId = rbacModel.getPermission(Permissions.SUPER_USER).getId();
 

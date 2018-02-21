@@ -1,4 +1,4 @@
-package com.xlot.sms.sender;
+package com.xlot.admin.sms;
 
 import java.util.ArrayList;
 import java.util.Collection;

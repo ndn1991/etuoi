@@ -1,4 +1,4 @@
-package com.xlot.sms.sender;
+package com.xlot.admin.sms;
 
 import com.mario.services.sms.SmsService;
 import com.nhb.common.async.RPCFuture;

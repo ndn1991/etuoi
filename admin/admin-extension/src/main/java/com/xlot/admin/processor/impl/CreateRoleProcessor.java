@@ -9,7 +9,7 @@ import com.nhb.common.data.PuArray;
 import com.nhb.common.data.PuElement;
 import com.nhb.common.data.PuObjectRO;
 import com.nhb.common.data.PuValue;
-import com.nhb.common.utils.Converter;
+import com.nhb.common.utils.UUIDUtils;
 import com.xlot.admin.model.RbacModel;
 import com.xlot.admin.processor.AbstractAdminProcessor;
 import com.xlot.admin.statics.Status;
@@ -31,7 +31,7 @@ public class CreateRoleProcessor extends AbstractAdminProcessor {
 		for (PuValue p : pua) {
 			permissionIds.add(getRaw(p));
 		}
-		byte[] id = Converter.uuidToBytes(UUID.randomUUID());
+		byte[] id = UUIDUtils.uuidToBytes(UUID.randomUUID());
 		long now = System.currentTimeMillis();
 		int c = rbacModel.insertRole(id, name, description, now);
 		if (c < 1) {
