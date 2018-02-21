@@ -1,0 +1,66 @@
+version: '2'
+services:
+  admin:
+    build: ./admin
+    container_name: admin
+    environment:
+      - MARIO_HEAP=128m
+    ports:
+      - 5564:5564
+    networks:
+      bridgenet:
+        ipv4_address: 192.168.1.18
+    depends_on:
+      - rabbitmq
+      - kafka
+    command: ["wait-for-it.sh", "rabbitmq:5672", "-t", "60", "--", "mario-entrypoint.sh"]
+
+  mysql:
+    build: ./mysql
+    ports:
+      - 3306:3306
+    container_name: mysql
+    volumes:
+      - mysqldata:/var/lib/mysql
+    networks:
+      bridgenet:
+        ipv4_address: 192.168.1.3
+
+  mongo:
+    image: mongo:3.4
+    container_name: mongo
+    volumes:
+      - mongodata:/data/db
+      - mongodata:/data/configdb
+    ports:
+      - 27017:27017
+    networks:
+      bridgenet:
+        ipv4_address: 192.168.1.2
+
+  rabbitmq:
+    image: rabbitmq:3.6-management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=root
+      - RABBITMQ_DEFAULT_PASS=Alert.show(1)
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      bridgenet:
+        ipv4_address: 192.168.1.1
+
+volumes:
+  mysqldata:
+    driver: local
+  mongodata:
+    driver: local
+networks:
+  bridgenet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 22.11.0.0/16
+          gateway: 22.11.0.1

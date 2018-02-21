@@ -1,0 +1,37 @@
+package com.xlot.admin.processor.impl;
+
+import java.util.List;
+
+import com.nhb.common.async.RPCFuture;
+import com.nhb.common.data.PuArray;
+import com.nhb.common.data.PuArrayList;
+import com.nhb.common.data.PuElement;
+import com.nhb.common.data.PuObject;
+import com.nhb.common.data.PuObjectRO;
+import com.xlot.admin.bean.PermissionBean;
+import com.xlot.admin.model.RbacModel;
+import com.xlot.admin.processor.AbstractAdminProcessor;
+import com.xlot.admin.statics.Status;
+
+public class FetchPermissionByRoleProcessor extends AbstractAdminProcessor {
+	private RbacModel rbacModel;
+
+	@Override
+	public void init(PuObjectRO params) {
+		rbacModel = getModelFactory().getModel(RbacModel.class.getName());
+	}
+
+	@Override
+	protected RPCFuture<PuElement> _process(PuObjectRO params) {
+		byte[] roleId = getRaw(params, "roleId");
+		List<PermissionBean> permissions = rbacModel.getPermission(roleId);
+		PuObject rs = baseResponse(Status.SUCCESS);
+		PuArray pua = new PuArrayList();
+		for (PermissionBean p : permissions) {
+			pua.addFrom(p.toObject());
+		}
+		rs.setPuArray("data", pua);
+		return futureResponse(rs);
+	}
+
+}

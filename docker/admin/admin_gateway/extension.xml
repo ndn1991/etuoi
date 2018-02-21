@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mario>
+    <name>admin_gateway</name>
+    <datasources>
+        <sql>
+            <name>admin_mysql</name>
+            <variables>
+                <variable name="url" type="string">jdbc:mysql://192.168.1.4:3306/admin</variable>
+                <variable name="driverClassName" type="string">com.mysql.jdbc.Driver</variable>
+                <variable name="username" type="string">root</variable>
+                <variable name="password" type="string">Alert.show(1)</variable>
+                <variable name="minPool" type="integer">1</variable>
+                <variable name="maxPool" type="integer">16</variable>
+                <variable name="maxSize" type="integer">32</variable>
+                <variable name="idleTimeout" type="integer">10000</variable>
+                <variable name="loginTimeout" type="integer">10000</variable>
+            </variables>
+        </sql>
+    </datasources>
+
+    <gateways>
+        <rabbitmq>
+            <name>admin_rabbitmq_gateway</name>
+            <server>admin_rabbitmq_server</server>
+            <queue>
+                <type>rpc</type>
+                <name>com.xlot.admin.mainQueue</name>
+                <autoack>true</autoack>
+            </queue>
+            <workerpool>
+                <poolsize>16</poolsize>
+                <ringbuffersize>2048</ringbuffersize>
+                <threadnamepattern>Admin RabbitMQ I/O Worker #%d</threadnamepattern>
+            </workerpool>
+        </rabbitmq>
+        <http>
+            <name>admin_http_gateway</name>
+            <server>admin_http_server</server>
+            <path>/admin</path>
+            <encoding>utf-8</encoding>
+            <async>true</async>
+            <deserializer>com.xlot.admin.CustomHttpGatewayDeserialier</deserializer>
+            <header name="Access-Control-Allow-Origin">*</header>
+            <header name="Access-Control-Allow-Methods">POST, GET</header>
+            <header name="Access-Control-Allow-Headers">Content-Type, Access-Control-Allow-Headers,Authorization, X-Requested-With</header>
+            <workerpool>
+                <poolsize>16</poolsize>
+                <ringbuffersize>2048</ringbuffersize>
+                <threadnamepattern>Admin Http Gateway Worker #%d</threadnamepattern>
+            </workerpool>
+        </http>
+    </gateways>
+
+    <servers>
+        <rabbitmq>
+            <name>admin_rabbitmq_server</name>
+            <endpoint>
+                <entry>192.168.1.2:5672</entry>
+            </endpoint>
+            <credential>
+                <username>root</username>
+                <password>Alert.show(1)</password>
+            </credential>
+        </rabbitmq>
+        <http>
+            <name>admin_http_server</name>
+            <port>5564</port>
+            <options>no_sessions</options>
+        </http>
+    </servers>
+
+    <lifecycles>
+        <handler>
+            <name>admin_handler</name>
+            <handle>com.xlot.admin.AdminHandler</handle>
+            <bind>
+                <gateway>admin_rabbitmq_gateway</gateway>
+                <gateway>admin_http_gateway</gateway>
+            </bind>
+            <variables>
+                <variable name="rabbitServer" type="string">admin_rabbitmq_server</variable>
+                <variable name="modelMappingFile" type="string">conf/model.properties</variable>
+                <variable name="mysql" type="string">admin_mysql</variable>
+                <variable name="acsProducer" type="string">acs_producer</variable>
+                <variable name="amsMO" type="string">ams_mo</variable>
+                <variable name="figuresMO" type="string">figures_mo</variable>
+                <variable name="rootUser" type="string">admin</variable>
+                <variable name="rootPassword" type="string">@dM1n</variable>
+                <variable name="commandPath" type="string">conf/commands.json</variable>
+            </variables>
+        </handler>
+        <managedobject>
+            <name>admin_mysql_init</name>
+            <handle>com.xlot.admin.MySqlInitializerMO</handle>
+            <variables>
+                <variable name="mysql" type="string">admin_mysql</variable>
+                <variable name="sqlPaths" type="string">conf/user.sql,conf/role.sql,conf/role_permission.sql,conf/permission.sql,conf/grant_role.sql</variable>
+            </variables>
+        </managedobject>
+        <managedobject>
+            <name>figures_mo</name>
+            <handle>com.xlot.admin.FiguresMO</handle>
+            <variables>
+                <variable name="config" type="string">conf/kafka.properties</variable>
+                <variable name="topic" type="string">xlot.figures</variable>
+                <variable name="appId" type="string">80b36e81-c161-4e9f-b7a8-79809d9006a3</variable>
+            </variables>
+        </managedobject>
+        <managedobject>
+            <name>ams_mo</name>
+            <handle>com.xlot.admin.AmsMO</handle>
+            <variables>
+                <variable name="configFile" type="string">conf/ams.properties</variable>
+                <variable name="appId" type="string">80b36e81-c161-4e9f-b7a8-79809d9006a3</variable>
+            </variables>
+        </managedobject>
+    </lifecycles>
+</mario>

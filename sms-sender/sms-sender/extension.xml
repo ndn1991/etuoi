@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mario>
+    <name>sms_sender</name>
+    <datasources>
+        <mongodb>
+            <name>sms_sender_mongodb</name>
+            <endpoint>
+                MONGO_ENTRIES
+            </endpoint>
+        </mongodb>
+    </datasources>
+
+    <servers>
+        <rabbitmq>
+            <name>sms_sender_rabbitmq_server</name>
+            <endpoint>
+                RABBIT_ENTRIES
+            </endpoint>
+            <credential>
+                <username>RABBIT_USER</username>
+                <password>RABBIT_PASSWORD</password>
+            </credential>
+        </rabbitmq>
+        <http>
+            <name>sms_sender_http_server</name>
+            <port>5565</port>
+            <options>no_sessions</options>
+        </http>
+    </servers>
+
+    <gateways>
+        <http>
+            <name>sms_sender_http_gateway</name>
+            <server>sms_sender_http_server</server>
+            <path>/sms</path>
+            <usemultipath>false</usemultipath>
+            <encoding>utf-8</encoding>
+            <async>true</async>
+            <header name="Access-Control-Allow-Origin">*</header>
+            <header name="Access-Control-Allow-Methods">POST, GET</header>
+            <header name="Access-Control-Allow-Headers">Access-Control-Allow-Headers, Origin,Accept, Authorization, X-Requested-With, Content-Type, Access-Control-Request-Method,
+                Access-Control-Request-Headers
+            </header>
+            <deserializer>com.xlot.sms.sender.CustomHttpGatewayDeserialier</deserializer>
+            <workerpool>
+                <poolsize>2</poolsize>
+                <ringbuffersize>2048</ringbuffersize>
+                <threadnamepattern>SMS Sender HTTP I/O Worker #%d
+                </threadnamepattern>
+            </workerpool>
+        </http>
+        <rabbitmq>
+            <name>sms_sender_rabbitmq_gateway</name>
+            <server>sms_sender_rabbitmq_server</server>
+            <queue>
+                <type>rpc</type>
+                <name>com.xlot.sms_sender.mainQueue</name>
+                <autoack>true</autoack>
+            </queue>
+            <workerpool>
+                <poolsize>4</poolsize>
+                <ringbuffersize>2048</ringbuffersize>
+                <threadnamepattern>SMS Sender I/O Thread #%d</threadnamepattern>
+            </workerpool>
+        </rabbitmq>
+    </gateways>
+
+    <lifecycles>
+        <handler>
+            <name>sms_sender_handler</name>
+            <handle>com.xlot.sms.sender.SmsSenderHandler</handle>
+            <bind>
+                <gateway>sms_sender_http_gateway</gateway>
+                <gateway>sms_sender_rabbitmq_gateway</gateway>
+            </bind>
+
+            <variables>
+                <variable name="mongo" type="string">sms_sender_mongodb</variable>
+                <variable name="database" type="string">sms_sender</variable>
+                <variable name="smsService" type="string">sms_service</variable>
+                <variable name="delayMinutes" type="integer">10</variable>
+            </variables>
+        </handler>
+    </lifecycles>
+
+    <services>
+        <sms>
+            <name>sms_service</name>
+            <handle>com.xlot.sms.sender.SpeedSmsSender</handle>
+            <variables>
+                <variable name="accessToken" type="string">KGYbNceQR1IdZ1oIKJsWNbuXHQmOu0cy</variable>
+            </variables>
+        </sms>
+    </services>
+</mario>
