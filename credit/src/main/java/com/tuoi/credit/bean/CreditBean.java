@@ -23,6 +23,7 @@ public class CreditBean {
 
 	@Data
 	public static class Payment {
+		private byte[] id;
 		private long timestamp;
 		private int type;
 		private long oriValue;
