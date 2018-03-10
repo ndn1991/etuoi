@@ -5,13 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import com.gaia.acs.api.GaiaAcsClient;
-import com.gaia.acs.api.cache.BundleImmutableConfigCache;
-import com.gaia.ams.client.AMSClient;
-import com.gaia.cashin.api.CashInClient;
 import com.google.common.base.Strings;
 import com.mario.entity.MessageHandleCallback;
 import com.mario.entity.impl.BaseMessageHandler;
@@ -25,12 +20,8 @@ import com.nhb.common.data.PuNull;
 import com.nhb.common.data.PuObject;
 import com.nhb.common.data.PuObjectRO;
 import com.nhb.common.db.models.ModelFactory;
-import com.nhb.common.utils.Converter;
 import com.nhb.common.utils.FileSystemUtils;
-import com.nhb.messaging.rabbit.producer.RabbitMQRPCProducer;
-import com.puppet.figures.client.FiguresClient;
 import com.xlot.admin.bean.PermissionBean;
-import com.xlot.admin.clientwrapper.Hermes2Client;
 import com.xlot.admin.id.JWTUtils;
 import com.xlot.admin.id.JwtLoginData;
 import com.xlot.admin.model.RbacModel;
@@ -50,22 +41,11 @@ public class AdminHandler extends BaseMessageHandler implements RbacInitializer 
 	private ModelFactory modelFactory;
 	private ProducerManager producerManager;
 	private UserCache userCache;
-	private AMSClient amsClient;
 
 	private RbacModel rbacModel;
-	private FiguresClient figuresClient;
-
-	private Hermes2Client hermesClient;
-	private BundleImmutableConfigCache acsConfigCache;
-	private GaiaAcsClient acsClient;
-	private CashInClient cashInClient;
 
 	@Override
 	public void init(PuObjectRO initParams) {
-		amsClient = getApi().acquireObject(initParams.getString("amsMO"), null);
-		figuresClient = getApi().acquireObject(initParams.getString("figuresMO"), null);
-		String hermesUrl = initParams.getString("hermesUrl", "http://hermespush.com/hermes2");
-		hermesClient = new Hermes2Client(Converter.bytesToUUIDString(amsClient.getApplicationId()), hermesUrl);
 		RabbitMQServerWrapper rabbitServer = getApi().getServerWrapper(initParams.getString("rabbitServer"));
 		producerManager = new ProducerManager(rabbitServer);
 
@@ -79,28 +59,12 @@ public class AdminHandler extends BaseMessageHandler implements RbacInitializer 
 		initRootUser(userModel, rbacModel, initParams.getString("rootUser"), initParams.getString("rootPassword"));
 		userCache = new UserCache(userModel);
 
-		int acsCacheSize = initParams.getInteger("acsCacheSize", 1000);
-		int acsTimeoutSeconds = initParams.getInteger("acsTimeoutSeconds", 60);
-		byte[] uuid = Converter.uuidToBytes(UUID.randomUUID());
-		RabbitMQRPCProducer producer = getApi().getProducer(initParams.getString("acsProducer"));
-		acsClient = new GaiaAcsClient(uuid, producer);
-		acsConfigCache = new BundleImmutableConfigCache(acsClient, acsCacheSize, acsTimeoutSeconds);
-		
-		RabbitMQRPCProducer amsProducer = getApi().getProducer(initParams.getString("cashInProducer"));
-		cashInClient = new CashInClient(amsClient.getApplicationId(), amsProducer);
-
 		String commandPath = initParams.getString("commandPath");
 		try {
 			processorFactory = AdminProcessorFactory.builder() //
 					.modelFactory(modelFactory) //
 					.producerManager(producerManager) //
 					.userCache(userCache) //
-					.amsClient(amsClient) //
-					.figuresClient(figuresClient) //
-					.hermesClient(hermesClient) //
-					.acsConfigCache(acsConfigCache) //
-					.acsClient(acsClient) //
-					.cashInClient(cashInClient) //
 					.build()
 					.init(FileSystemUtils.createAbsolutePathFrom("extensions", getExtensionName(), commandPath));
 		} catch (IOException e) {

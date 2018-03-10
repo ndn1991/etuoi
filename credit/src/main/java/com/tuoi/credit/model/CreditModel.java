@@ -14,6 +14,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import com.nhb.common.db.models.AbstractModel;
 import com.tuoi.credit.bean.CreditBean;
 import com.tuoi.credit.bean.CreditBean.Payment;
@@ -34,6 +35,17 @@ public class CreditModel extends AbstractModel {
 		collection = database.getCollection("credit");
 	}
 
+	public void pay(byte[] creditId, Payment payment) {
+		Document doc = new Document();
+		doc.append("id", payment.getId());
+		doc.append("timestamp", payment.getTimestamp());
+		doc.append("type", payment.getType());
+		doc.append("oriValue", payment.getOriValue());
+		doc.append("value", payment.getValue());
+		Bson push = Updates.push("payments", doc);
+		collection.findOneAndUpdate(Filters.eq("id", creditId), push);
+	}
+
 	public void insert(CreditBean c) {
 		Document d = new Document() //
 				.append("id", c.getCustomerId()) //
@@ -48,6 +60,15 @@ public class CreditModel extends AbstractModel {
 				.append("phone", c.getPhone()) //
 				.append("payments", Collections.emptyList());
 		collection.insertOne(d);
+	}
+
+	public CreditBean detail(byte[] id) {
+		return collection.find(Filters.eq("id", id)).map(new Function<Document, CreditBean>() {
+			@Override
+			public CreditBean apply(Document t) {
+				return map(t);
+			}
+		}).first();
 	}
 
 	public List<CreditBean> search(String content, int status, int from, int size) {
@@ -110,5 +131,10 @@ public class CreditModel extends AbstractModel {
 
 	public int count(String content, int status) {
 		return (int) collection.count(makeQuery(content, status));
+	}
+
+	public void updateCreditStatus(byte[] id, int creditStatus) {
+		Bson set = Updates.set("status", creditStatus);
+		collection.findOneAndUpdate(Filters.eq("id", id), set);
 	}
 }
