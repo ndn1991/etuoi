@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mario>
+	<name>credit</name>
+	<datasources>
+		<mongodb>
+			<name>credit_mongo</name>
+			<endpoint>
+				<entry>11.22.0.2:27017</entry>
+			</endpoint>
+		</mongodb>
+	</datasources>
+
+	<gateways>
+		<rabbitmq>
+			<name>credit_rabbitmq_gateway</name>
+			<server>credit_rabbitmq_server</server>
+			<queue>
+				<type>rpc</type>
+				<name>tuoi.credit.mainQueue</name>
+				<autoack>true</autoack>
+			</queue>
+			<workerpool>
+				<poolsize>16</poolsize>
+				<ringbuffersize>2048</ringbuffersize>
+				<threadnamepattern>Credit RabbitMQ I/O Worker #%d</threadnamepattern>
+			</workerpool>
+		</rabbitmq>
+		<http>
+			<name>credit_http_gateway</name>
+			<server>credit_http_server</server>
+			<path>/credit</path>
+			<encoding>utf-8</encoding>
+			<async>true</async>
+			<deserializer>com.xlot.admin.CustomHttpGatewayDeserialier
+			</deserializer>
+			<header name="Access-Control-Allow-Origin">*</header>
+			<header name="Access-Control-Allow-Methods">POST, GET</header>
+			<header name="Access-Control-Allow-Headers">Content-Type,
+				Access-Control-Allow-Headers,Authorization, X-Requested-With
+			</header>
+			<workerpool>
+				<poolsize>16</poolsize>
+				<ringbuffersize>2048</ringbuffersize>
+				<threadnamepattern>Admin Http Gateway Worker #%d</threadnamepattern>
+			</workerpool>
+		</http>
+	</gateways>
+
+	<servers>
+		<rabbitmq>
+			<name>credit_rabbitmq_server</name>
+			<endpoint>
+				<entry>11.22.0.1:5672</entry>
+			</endpoint>
+			<credential>
+				<username>root</username>
+				<password>Alert.show(1)</password>
+			</credential>
+		</rabbitmq>
+		<http>
+			<name>credit_http_server</name>
+			<port>9911</port>
+			<options>no_sessions</options>
+		</http>
+	</servers>
+
+	<producers>
+		<rabbitmq>
+			<name>acs_producer</name>
+			<server>admin_rabbitmq_server</server>
+			<timeout>30000</timeout>
+			<queue>
+				<name>gaia.acs.mainQueue</name>
+				<type>rpc</type>
+			</queue>
+		</rabbitmq>
+		<rabbitmq>
+			<name>cash_in_producer</name>
+			<server>admin_rabbitmq_server</server>
+			<timeout>30000</timeout>
+			<queue>
+				<name>com.xlot.cashin.mainQueue</name>
+				<type>rpc</type>
+			</queue>
+		</rabbitmq>
+	</producers>
+
+	<lifecycles>
+		<handler>
+			<name>admin_handler</name>
+			<handle>com.xlot.admin.AdminHandler</handle>
+			<bind>
+				<gateway>admin_rabbitmq_gateway</gateway>
+				<gateway>admin_http_gateway</gateway>
+			</bind>
+			<variables>
+				<variable name="rabbitServer" type="string">admin_rabbitmq_server
+				</variable>
+				<variable name="modelMappingFile" type="string">conf/model.properties
+				</variable>
+				<variable name="mysql" type="string">admin_mysql</variable>
+				<variable name="acsProducer" type="string">acs_producer</variable>
+				<variable name="amsMO" type="string">ams_mo</variable>
+				<variable name="figuresMO" type="string">figures_mo</variable>
+				<variable name="acsProducer" type="string">acs_producer</variable>
+				<variable name="cashInProducer" type="string">cash_in_producer
+				</variable>
+				<variable name="rootUser" type="string">admin</variable>
+				<variable name="rootPassword" type="string">@dM1n</variable>
+				<variable name="commandPath" type="string">conf/commands.json
+				</variable>
+			</variables>
+		</handler>
+		<managedobject>
+			<name>admin_mysql_init</name>
+			<handle>com.xlot.admin.MySqlInitializerMO</handle>
+			<variables>
+				<variable name="mysql" type="string">admin_mysql</variable>
+				<variable name="sqlPaths" type="string">conf/user.sql,conf/role.sql,conf/role_permission.sql,conf/permission.sql,conf/grant_role.sql
+				</variable>
+			</variables>
+		</managedobject>
+		<managedobject>
+			<name>figures_mo</name>
+			<handle>com.xlot.admin.FiguresMO</handle>
+			<variables>
+				<variable name="config" type="string">conf/kafka.properties
+				</variable>
+				<variable name="topic" type="string">xlot.figures</variable>
+				<variable name="appId" type="string">APP_ID</variable>
+			</variables>
+		</managedobject>
+		<managedobject>
+			<name>ams_mo</name>
+			<handle>com.xlot.admin.AmsMO</handle>
+			<variables>
+				<variable name="configFile" type="string">conf/ams.properties
+				</variable>
+				<variable name="appId" type="string">APP_ID</variable>
+			</variables>
+		</managedobject>
+	</lifecycles>
+</mario>
