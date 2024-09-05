@@ -19,6 +19,10 @@
             'alsClosedAccount': formatDate(new Date()) + '0000000003000000003150000.00',
             'alsSynchronization':formatDate(new Date()) + '000000000500500.00',
         }
+		const batch2Separator = {
+			'tiSynchronization': '~',
+			'tiUtilization': '~'
+		}
         const batch2Columns = {
             '': [
                 { name: 'Name', length: 20 },
@@ -91,7 +95,17 @@
                 {'name':'res_tran_ref_no','length':16},
                 {'name':'res_status','length':1},
                 {'name':'res_branch','length':20}
-            ]
+            ],
+			'tiSynchronization': [
+				{ name: 'res_system_id', label: 'System ID', default: 'TRADE', type: 'String', length: 5 },
+				{ name: 'res_customer_id', label: 'Customer ID', type: 'String', length: 14 },
+				{ name: 'res_facility_id', label: 'Facility ID', type: 'String', length: 14 },
+				{ name: 'res_loan_acno', label: 'Loan Account Number', type: 'Numeric', length: 26 },
+				{ name: 'res_prin_amt', label: 'Principal OS', type: 'Numeric', length: 16, sample: '0000000500500.00' },
+				{ name: '_', length:30, invisible: true, value: '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'},
+				{ name: 'res_currency_cd', label: 'Currency Code', type: 'String', length: 3 },
+				{ name: 'res_loan_status', length: 2}
+			]
         };
         function formatDate(date) {
             let year = date.getFullYear();
@@ -111,6 +125,8 @@
         <option value="alsEndorser">ALS Endorser Creation</option>
         <option value="alsSynchronization">ALS Synchronization</option>
         <option value="stimReversal">STIM Utilization Reversal</option>
+		<option value="tiUtilization">TI Utilization</option>
+		<option value="tiSynchronization">TI Synchronization</option>
     </select>
     <br />
     <br />
@@ -125,6 +141,7 @@
     <br />
     <button onclick="addRow()">Add Row</button>
     <button onclick="convertTableToFixedLength()">Convert to Fixed Length File</button>
+	<button onclick="convertTableToCSV()">Convert to CSV</button>
     <a id="downloadLink" style="display: none;">Download File</a>
 
     <script>
@@ -162,6 +179,10 @@
                 input.type = 'text';
                 input.value = data[index] || '';
                 input.setAttribute('maxlength', '' + col.length);
+				if (col.invisible) {
+					input.setAttribute('readonly', true);
+					input.value = col.value;
+				}
                 newCell.appendChild(input);
             });
         }
@@ -169,6 +190,39 @@
         // Function to pad string to fixed length
         function padString(str, length) {
             return str.padEnd(length, ' ');
+        }
+		
+		function convertTableToCSV() {
+            const comboBox = document.getElementById('comboBox');
+            const selectedValue = comboBox.value;
+
+            const table = document.getElementById('dataTable');
+            const rows = table.getElementsByTagName('tr');
+            let csvText = '';
+            if (batch2Header[selectedValue]) {
+                csvText += batch2Header[selectedValue] + '\n'
+            }
+
+            for (let i = 1; i < rows.length; i++) { // Start from 1 to skip the header row
+                const inputs = rows[i].getElementsByTagName('input');
+                for (let j = 0; j < inputs.length; j++) {
+                    csvText += inputs[j].value + batch2Separator[selectedValue] || '~';
+                }
+				csvText = csvText.substring(0, csvText.length - 1);
+                csvText += '\n';
+            }
+
+            if (batch2Trailer[selectedValue]) {
+                csvText += batch2Trailer[selectedValue] + '\n';
+            }
+
+            // Create a blob and generate a download link
+            const blob = new Blob([csvText], { type: 'text/plain' });
+            const link = document.getElementById('downloadLink');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'csv.txt';
+            link.style.display = 'block';
+            link.innerText = 'Download CSV';
         }
 
         // Function to convert table to fixed length file
